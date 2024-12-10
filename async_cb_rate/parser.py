@@ -1,4 +1,3 @@
-import re
 import aiohttp
 import warnings
 
@@ -14,9 +13,6 @@ from async_cb_rate.errors import NoValidDateError, CurrencyRateNotFoundError
 
 warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
 
-compiled_letters_pattern = re.compile(r"[а-яА-я]+")
-compiled_price_pattern = re.compile(r"\d+.\d+$")
-
 
 async def _parse_cb(date: datetime) -> Generator[Currency, None, None]:
     if date > datetime.now():
@@ -30,11 +26,9 @@ async def _parse_cb(date: datetime) -> Generator[Currency, None, None]:
     soup = BeautifulSoup(data, "lxml")
 
     for tag in soup.select("valute"):
-        text = tag.text
-
-        code = text[3:6]
-        name = " ".join(compiled_letters_pattern.findall(text))
-        price = float(compiled_price_pattern.findall(text)[0].replace(",", "."))
+        code = tag.charcode.contents[0]
+        name = tag.contents[3].contents
+        price = float(tag.value.contents[0].replace(",", "."))
 
         yield Currency(name=name, code=code, price=price, date=date)
 
